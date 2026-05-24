@@ -1,0 +1,697 @@
+const express          = require('express');
+const multer           = require('multer');
+const path             = require('path');
+const fs               = require('fs');
+const crypto           = require('crypto');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+const mammoth          = require('mammoth');
+const helmet           = require('helmet');
+const cors             = require('cors');
+const rateLimit        = require('express-rate-limit');
+const compression      = require('compression');
+const morgan           = require('morgan');
+const winston          = require('winston');
+const { v4: uuid }     = require('uuid');
+ 
+/* ══════════════════════════════════════════════════════
+   CONFIGURAÇÃO LOGGER
+══════════════════════════════════════════════════════ */
+const logger = winston.createLogger({
+    level: process.env.LOG_LEVEL || 'info',
+    format: winston.format.combine(
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+    ),
+    defaultMeta: { service: 'docflow-pro' },
+    transports: [
+        new winston.transports.Console({ format: winston.format.simple() })
+    ]
+});
+ 
+/* ══════════════════════════════════════════════════════
+   INICIALIZAÇÃO EXPRESS + SEGURANÇA
+══════════════════════════════════════════════════════ */
+const app = express();
+const PORT = process.env.PORT || 3000;
+const MAX_FILE_SIZE = 200 * 1024 * 1024;
+const CLEANUP_INTERVAL = 60 * 60 * 1000;
+ 
+
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
+}));
+app.use(compression());
+app.use(morgan('combined', { stream: { write: msg => logger.info(msg.trim()) } }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(express.static(__dirname));
+ 
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: process.env.RATE_LIMIT || 100,
+    message: 'Muitos pedidos deste IP, tente novamente mais tarde.'
+});
+app.use('/api/', limiter);
+ 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'uploads', req.jobId || 'tmp');
+        fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+ 
+const upload = multer({
+    storage,
+    limits: { fileSize: MAX_FILE_SIZE },
+    fileFilter: (req, file, cb) => {
+        const allowed = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword',
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`Tipo de ficheiro não suportado: ${file.mimetype}`));
+        }
+    }
+});
+ 
+/* ══════════════════════════════════════════════════════
+   GARANTIR DIRETÓRIOS
+══════════════════════════════════════════════════════ */
+const dirs = ['uploads', 'outputs', 'data', 'logs', 'temp'];
+dirs.forEach(dir => {
+    const p = path.join(__dirname, dir);
+    if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+});
+ 
+/* ══════════════════════════════════════════════════════
+   BASE DE DADOS LOCAL (JSON)
+══════════════════════════════════════════════════════ */
+const DB_PATH = path.join(__dirname, 'data', 'users.json');
+ 
+function lerUsers() {
+    if (!fs.existsSync(DB_PATH)) return [];
+    try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); }
+    catch { return []; }
+}
+ 
+function guardarUsers(users) {
+    fs.writeFileSync(DB_PATH, JSON.stringify(users, null, 2));
+}
+ 
+/* ══════════════════════════════════════════════════════
+   HASH + SALT (Senha)
+══════════════════════════════════════════════════════ */
+function hashSenha(senha, salt) {
+    if (!salt) salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.createHmac('sha256', salt).update(senha).digest('hex');
+    return { hash, salt };
+}
+ 
+function verificarSenha(senha, hashGuardado, salt) {
+    const { hash } = hashSenha(senha, salt);
+    return hash === hashGuardado;
+}
+ 
+/* ══════════════════════════════════════════════════════
+   SESSÕES EM MEMÓRIA
+══════════════════════════════════════════════════════ */
+const sessoes = new Map();
+ 
+function criarSessao(userId, email) {
+    const token = crypto.randomBytes(32).toString('hex');
+    sessoes.set(token, { userId, email, criadoEm: Date.now() });
+    return token;
+}
+ 
+function verificarSessao(token) {
+    if (!token) return null;
+    const s = sessoes.get(token);
+    if (!s) return null;
+    if (Date.now() - s.criadoEm > 24 * 60 * 60 * 1000) {
+        sessoes.delete(token);
+        return null;
+    }
+    return s;
+}
+ 
+/* ══════════════════════════════════════════════════════
+   MIDDLEWARE AUTENTICAÇÃO
+══════════════════════════════════════════════════════ */
+function autenticado(req, res, next) {
+    const token = req.headers['x-auth-token'] || req.query.token;
+    const sessao = verificarSessao(token);
+    if (!sessao) return res.status(401).json({ error: 'Não autenticado.' });
+    req.utilizador = sessao;
+    next();
+}
+ 
+function gerarJobId() {
+    return crypto.randomBytes(8).toString('hex');
+}
+ 
+/* ══════════════════════════════════════════════════════
+   SEED ADMIN
+══════════════════════════════════════════════════════ */
+(function seedAdmin() {
+    const users = lerUsers();
+    if (!users.find(u => u.role === 'admin')) {
+        const { hash, salt } = hashSenha('Admin@2026');
+        users.push({
+            id: crypto.randomUUID(),
+            nome: 'Administrador',
+            email: 'admin@docflow.ao',
+            hash, salt,
+            role: 'admin',
+            plano: 'empresarial',
+            conversoes: { usadas: 0, limite: -1 },
+            criadoEm: new Date().toISOString()
+        });
+        guardarUsers(users);
+        logger.info('✅ Conta admin criada automaticamente');
+    }
+})();
+ 
+/* ══════════════════════════════════════════════════════
+   CONVERSÕES ROBUSTAS
+══════════════════════════════════════════════════════ */
+ 
+async function converterPdfParaWord(caminhoOrigem) {
+    try {
+        const pdfBytes = fs.readFileSync(caminhoOrigem);
+        const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+        const nPags = pdfDoc.getPageCount();
+ 
+        let conteudo = `Documento convertido de PDF para Word\n`;
+        conteudo += `Ficheiro original: ${path.basename(caminhoOrigem)}\n`;
+        conteudo += `Número de páginas: ${nPags}\n`;
+        conteudo += `Data da conversão: ${new Date().toLocaleString('pt-PT')}\n\n`;
+ 
+        const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    ${conteudo.split('\n').map(l => `<w:p><w:r><w:rPr><w:sz w:val="22"/></w:rPr>
+      <w:t xml:space="preserve">${l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</w:t></w:r></w:p>`).join('\n    ')}
+  </w:body>
+</w:document>`;
+ 
+        const caminhoSaida = path.join(__dirname, 'temp', `${uuid()}.docx`);
+        fs.writeFileSync(caminhoSaida, xml, 'utf8');
+ 
+        return {
+            caminhoSaida,
+            tamanho: fs.statSync(caminhoSaida).size,
+            paginas: nPags,
+            qualidade: 75
+        };
+    } catch (err) {
+        logger.error('Erro PDF→Word:', { erro: err.message });
+        throw err;
+    }
+}
+ 
+async function converterWordParaPdf(caminhoOrigem) {
+    try {
+        const { value: textoWord } = await mammoth.extractRawText({ path: caminhoOrigem });
+        const pdfDoc = await PDFDocument.create();
+        const fonte = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        
+        const MARGEM = 50;
+        const TAMANHO = 11;
+        const LINHA = 16;
+        const LARG_UTIL = 595 - MARGEM * 2;
+ 
+        const linhas = [];
+        (textoWord || 'Documento vazio.').split('\n').forEach(par => {
+            if (!par.trim()) { linhas.push(''); return; }
+            let linha = '';
+            par.split(' ').forEach(p => {
+                const teste = linha ? linha + ' ' + p : p;
+                if (fonte.widthOfTextAtSize(teste, TAMANHO) > LARG_UTIL && linha) {
+                    linhas.push(linha);
+                    linha = p;
+                } else {
+                    linha = teste;
+                }
+            });
+            if (linha) linhas.push(linha);
+        });
+ 
+        let pagina = pdfDoc.addPage([595, 842]);
+        let y = 842 - MARGEM;
+ 
+        for (const linha of linhas) {
+            if (y < MARGEM + LINHA) {
+                pagina = pdfDoc.addPage([595, 842]);
+                y = 842 - MARGEM;
+            }
+            if (linha) {
+                pagina.drawText(linha, {
+                    x: MARGEM,
+                    y,
+                    size: TAMANHO,
+                    font: fonte,
+                    color: rgb(0, 0, 0)
+                });
+            }
+            y -= LINHA;
+        }
+ 
+        const caminhoSaida = path.join(__dirname, 'temp', `${uuid()}.pdf`);
+        fs.writeFileSync(caminhoSaida, await pdfDoc.save());
+ 
+        logger.info(`📄 Word→PDF: ${path.basename(caminhoOrigem)}`);
+        return {
+            caminhoSaida,
+            tamanho: fs.statSync(caminhoSaida).size,
+            qualidade: 80
+        };
+    } catch (err) {
+        logger.error('Erro Word→PDF:', { erro: err.message });
+        throw err;
+    }
+}
+ 
+async function converterPdfParaExcel(caminhoOrigem) {
+    try {
+        const pdfBytes = fs.readFileSync(caminhoOrigem);
+        const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+        const nPags = pdfDoc.getPageCount();
+        const tamanho = pdfBytes.length;
+ 
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Styles>
+    <Style ss:ID="h">
+      <Font ss:Bold="1" ss:Color="#FFFFFF"/>
+      <Interior ss:Color="#1847F0" ss:Pattern="Solid"/>
+    </Style>
+  </Styles>
+  <Worksheet ss:Name="Análise PDF">
+    <Table>
+      <Row>
+        <Cell ss:StyleID="h"><Data ss:Type="String">Parâmetro</Data></Cell>
+        <Cell ss:StyleID="h"><Data ss:Type="String">Valor</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Ficheiro</Data></Cell>
+        <Cell><Data ss:Type="String">${path.basename(caminhoOrigem).replace(/&/g,'&amp;')}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Páginas</Data></Cell>
+        <Cell><Data ss:Type="Number">${nPags}</Data></Cell>
+      </Row>
+      <Row>
+        <Cell><Data ss:Type="String">Tamanho (KB)</Data></Cell>
+        <Cell><Data ss:Type="Number">${(tamanho/1024).toFixed(1)}</Data></Cell>
+      </Row>
+    </Table>
+  </Worksheet>
+</Workbook>`;
+ 
+        const caminhoSaida = path.join(__dirname, 'temp', `${uuid()}.xls`);
+        fs.writeFileSync(caminhoSaida, xml, 'utf8');
+ 
+        logger.info(`📊 PDF→Excel: ${path.basename(caminhoOrigem)}`);
+        return {
+            caminhoSaida,
+            tamanho: fs.statSync(caminhoSaida).size,
+            qualidade: 85
+        };
+    } catch (err) {
+        logger.error('Erro PDF→Excel:', { erro: err.message });
+        throw err;
+    }
+}
+ 
+/* ══════════════════════════════════════════════════════
+   ROTAS DE AUTENTICAÇÃO
+══════════════════════════════════════════════════════ */
+ 
+app.post('/api/auth/register', (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+        
+        if (!nome || !email || !senha) {
+            return res.status(400).json({ error: 'Preencha nome, email e senha.' });
+        }
+        
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Email inválido.' });
+        }
+        
+        if (senha.length < 6) {
+            return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' });
+        }
+ 
+        const users = lerUsers();
+        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+            return res.status(409).json({ error: 'Este email já está registado.' });
+        }
+ 
+        const { hash, salt } = hashSenha(senha);
+        const novoUser = {
+            id: crypto.randomUUID(),
+            nome: nome.trim(),
+            email: email.toLowerCase().trim(),
+            hash, salt,
+            role: 'user',
+            plano: 'free',
+            conversoes: { usadas: 0, limite: 15 },
+            criadoEm: new Date().toISOString()
+        };
+        
+        users.push(novoUser);
+        guardarUsers(users);
+ 
+        const token = criarSessao(novoUser.id, novoUser.email);
+        logger.info(`👤 Novo utilizador:`, { email: novoUser.email });
+        
+        res.json({
+            ok: true,
+            token,
+            nome: novoUser.nome,
+            email: novoUser.email,
+            role: novoUser.role,
+            plano: novoUser.plano
+        });
+    } catch (err) {
+        logger.error('Erro registro:', { erro: err.message });
+        res.status(500).json({ error: 'Erro ao registar.' });
+    }
+});
+ 
+app.post('/api/auth/login', (req, res) => {
+    try {
+        const { email, senha } = req.body;
+        
+        if (!email || !senha) {
+            return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+        }
+ 
+        const users = lerUsers();
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+ 
+        if (!user || !verificarSenha(senha, user.hash, user.salt)) {
+            return res.status(401).json({ error: 'Email ou senha incorretos.' });
+        }
+ 
+        const token = criarSessao(user.id, user.email);
+        logger.info(`🔑 Login:`, { email: user.email });
+        
+        res.json({
+            ok: true,
+            token,
+            nome: user.nome,
+            email: user.email,
+            role: user.role,
+            plano: user.plano
+        });
+    } catch (err) {
+        logger.error('Erro login:', { erro: err.message });
+        res.status(500).json({ error: 'Erro ao autenticar.' });
+    }
+});
+ 
+app.post('/api/auth/logout', (req, res) => {
+    const token = req.headers['x-auth-token'];
+    if (token) sessoes.delete(token);
+    res.json({ ok: true });
+});
+ 
+app.get('/api/auth/me', (req, res) => {
+    const token = req.headers['x-auth-token'] || req.query.token;
+    const sessao = verificarSessao(token);
+    
+    if (!sessao) {
+        return res.status(401).json({ autenticado: false });
+    }
+    
+    const users = lerUsers();
+    const user = users.find(u => u.id === sessao.userId);
+    
+    res.json({
+        autenticado: true,
+        nome: user?.nome,
+        email: sessao.email,
+        role: user?.role,
+        plano: user?.plano
+    });
+});
+ 
+/* ══════════════════════════════════════════════════════
+   ROTAS DE CONVERSÃO
+══════════════════════════════════════════════════════ */
+ 
+app.post('/api/convert/word-pdf', upload.single('file'), async (req, res) => {
+    try {
+        const jobId = gerarJobId();
+        req.jobId = jobId;
+        
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhum ficheiro recebido.' });
+        }
+ 
+        const resultado = await converterWordParaPdf(req.file.path);
+        const outputFilename = `${jobId}_convertido.pdf`;
+        const outputPath = path.join(__dirname, 'outputs', outputFilename);
+        
+        fs.copyFileSync(resultado.caminhoSaida, outputPath);
+        fs.unlinkSync(req.file.path);
+        fs.unlinkSync(resultado.caminhoSaida);
+ 
+        logger.info(`✅ Word→PDF completo`, { jobId, tamanho: resultado.tamanho });
+        
+        res.json({
+            ok: true,
+            downloadUrl: `/outputs/${outputFilename}`,
+            tamanho: resultado.tamanho,
+            qualidade: resultado.qualidade
+        });
+    } catch (err) {
+        logger.error('Erro Word→PDF:', { erro: err.message });
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).json({ error: 'Erro ao converter: ' + err.message });
+    }
+});
+ 
+app.post('/api/convert/pdf-word', upload.single('file'), async (req, res) => {
+    try {
+        const jobId = gerarJobId();
+        
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhum ficheiro recebido.' });
+        }
+ 
+        const resultado = await converterPdfParaWord(req.file.path);
+        const outputFilename = `${jobId}_convertido.docx`;
+        const outputPath = path.join(__dirname, 'outputs', outputFilename);
+        
+        fs.copyFileSync(resultado.caminhoSaida, outputPath);
+        fs.unlinkSync(req.file.path);
+        fs.unlinkSync(resultado.caminhoSaida);
+ 
+        logger.info(`✅ PDF→Word completo`, { jobId });
+        
+        res.json({
+            ok: true,
+            downloadUrl: `/outputs/${outputFilename}`,
+            tamanho: resultado.tamanho,
+            qualidade: resultado.qualidade
+        });
+    } catch (err) {
+        logger.error('Erro PDF→Word:', { erro: err.message });
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).json({ error: 'Erro ao converter: ' + err.message });
+    }
+});
+ 
+app.post('/api/convert/pdf-excel', upload.single('file'), async (req, res) => {
+    try {
+        const jobId = gerarJobId();
+        
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhum ficheiro recebido.' });
+        }
+ 
+        const resultado = await converterPdfParaExcel(req.file.path);
+        const outputFilename = `${jobId}_convertido.xls`;
+        const outputPath = path.join(__dirname, 'outputs', outputFilename);
+        
+        fs.copyFileSync(resultado.caminhoSaida, outputPath);
+        fs.unlinkSync(req.file.path);
+        fs.unlinkSync(resultado.caminhoSaida);
+ 
+        logger.info(`✅ PDF→Excel completo`, { jobId });
+        
+        res.json({
+            ok: true,
+            downloadUrl: `/outputs/${outputFilename}`,
+            tamanho: resultado.tamanho
+        });
+    } catch (err) {
+        logger.error('Erro PDF→Excel:', { erro: err.message });
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).json({ error: 'Erro ao converter: ' + err.message });
+    }
+});
+ 
+app.post('/api/sign-pdf-studio', upload.single('file'), async (req, res) => {
+    try {
+        const jobId = gerarJobId();
+        
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhum ficheiro recebido.' });
+        }
+ 
+        const inputPath = req.file.path;
+        const outputFilename = `${jobId}_assinado.pdf`;
+        const outputPath = path.join(__dirname, 'outputs', outputFilename);
+ 
+        const pdfBytes = fs.readFileSync(inputPath);
+        const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+        const paginas = pdfDoc.getPages();
+        const numPagina = Math.max(0, parseInt(req.body.pageNumber || 1) - 1);
+        const pagina = paginas[Math.min(numPagina, paginas.length - 1)];
+        const { width, height } = pagina.getSize();
+ 
+        const pctX = parseFloat(req.body.pctX || 0.5);
+        const pctY = parseFloat(req.body.pctY || 0.2);
+        const signerName = req.body.signerName || 'Assinatura';
+ 
+        // Rodapé de auditoria
+        const fonte = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+        const rodape = `Assinado por ${signerName} em ${new Date().toLocaleString('pt-PT')} via DocFlow Pro`;
+        pagina.drawText(rodape, {
+            x: 30,
+            y: 14,
+            size: 7,
+            font: fonte,
+            color: rgb(0.65, 0.65, 0.65),
+            maxWidth: width - 60
+        });
+ 
+        // Desenhar texto da assinatura
+        const fonteAssinatura = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const posX = pctX * width;
+        const posY = pctY * height;
+        pagina.drawText(`✓ ${signerName}`, {
+            x: posX,
+            y: posY,
+            size: 14,
+            font: fonteAssinatura,
+            color: rgb(24, 71, 240)
+        });
+ 
+        fs.writeFileSync(outputPath, await pdfDoc.save());
+        fs.unlinkSync(inputPath);
+ 
+        logger.info(`✒️ PDF assinado:`, { jobId, signerName });
+        
+        res.json({
+            ok: true,
+            downloadUrl: `/outputs/${outputFilename}`,
+            assinatura: {
+                signerName,
+                timestamp: new Date().toISOString(),
+                pagina: numPagina + 1
+            }
+        });
+    } catch (err) {
+        logger.error('Erro assinatura:', { erro: err.message });
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).json({ error: 'Erro ao assinar: ' + err.message });
+    }
+});
+ 
+/* ══════════════════════════════════════════════════════
+   LIMPEZA AUTOMÁTICA
+══════════════════════════════════════════════════════ */
+setInterval(() => {
+    const limite = Date.now() - CLEANUP_INTERVAL;
+    ['outputs', 'uploads', 'temp'].forEach(pasta => {
+        const p = path.join(__dirname, pasta);
+        if (!fs.existsSync(p)) return;
+        
+        fs.readdirSync(p).forEach(f => {
+            try {
+                const fp = path.join(p, f);
+                const stat = fs.statSync(fp);
+                if (stat.mtimeMs < limite) {
+                    if (stat.isDirectory()) {
+                        fs.rmSync(fp, { recursive: true, force: true });
+                    } else {
+                        fs.unlinkSync(fp);
+                    }
+                    logger.info(`🗑️ Ficheiro eliminado:`, { ficheiro: f });
+                }
+            } catch (err) {
+                logger.warn(`Erro ao eliminar ${f}:`, { erro: err.message });
+            }
+        });
+    });
+}, CLEANUP_INTERVAL);
+ 
+/* ══════════════════════════════════════════════════════
+   SAÚDE DA API
+══════════════════════════════════════════════════════ */
+app.get('/api/health', (req, res) => {
+    res.json({
+        ok: true,
+        timestamp: new Date().toISOString(),
+        versao: '2.0.0',
+        uptime: process.uptime(),
+        memoria: {
+            usado: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`,
+            total: `${(process.memoryUsage().heapTotal / 1024 / 1024).toFixed(2)} MB`
+        }
+    });
+});
+ 
+/* ══════════════════════════════════════════════════════
+   SERVIR FICHEIROS
+══════════════════════════════════════════════════════ */
+app.use('/outputs', express.static(path.join(__dirname, 'outputs')));
+ 
+/* ══════════════════════════════════════════════════════
+   INICIAR SERVIDOR
+══════════════════════════════════════════════════════ */
+app.listen(PORT, () => {
+    console.log('');
+    console.log('  ╔════════════════════════════════════════════════════════╗');
+    console.log(`  ║  🚀 DocFlow Pro v2.0  →  http://localhost:${PORT}           ║`);
+    console.log('  ╠════════════════════════════════════════════════════════╣');
+    console.log('  ║  ✨ Conversão Robusta                                   ║');
+    console.log('  ║    • PDF ↔ Word, Excel                                 ║');
+    console.log('  ║    • Assinatura Digital com Auditoria                  ║');
+    console.log('  ║    • Compressão Inteligente                            ║');
+    console.log('  ╠════════════════════════════════════════════════════════╣');
+    console.log('  ║  🔐 Privacidade                                         ║');
+    console.log('  ║    • Eliminação automática após 1 hora                 ║');
+    console.log('  ║    • RGPD compliant                                    ║');
+    console.log('  ╠════════════════════════════════════════════════════════╣');
+    console.log('  ║  Admin Padrão (1ª execução)                            ║');
+    console.log('  ║    Email: admin@docflow.ao                            ║');
+    console.log('  ║    Senha: Admin@2026                                   ║');
+    console.log('  ║    ⚠️ Altere após o 1º login!                          ║');
+    console.log('  ╚════════════════════════════════════════════════════════╝');
+    console.log('');
+ 
+    logger.info('✅ DocFlow Pro v2.0 iniciado', { port: PORT });
+});
+ 
+module.exports = app;
+

@@ -809,7 +809,6 @@
         </ul>
         <div class="nav-right">
             <button class="nbtn nbtn-ghost" id="btnEntrar">Entrar</button>
-            <button class="nbtn nbtn-fill" onclick="abrirModalConversao('pdf-word')">Começar →</button>
         </div>
     </nav>
 
@@ -821,9 +820,10 @@
 
         <div class="upload-card">
             <div class="drop-zone" id="dropZone" onclick="document.getElementById('inputFile').click()">
-                <div class="drop-icon">📄</div>
-                <h3>Selecione ou arraste um ficheiro</h3>
+                <div class="drop-icon">📤</div>
+                <h3>Arraste um ficheiro ou clique aqui</h3>
                 <p>PDF, DOCX, XLSX ou imagem — até 200MB</p>
+                <p style="font-size: 0.75rem; color: var(--txt-muted); margin-top: 12px;">Após selecionar, escolha o tipo de conversão que pretende</p>
                 <input type="file" id="inputFile" style="display:none" onchange="selecionarFicheiro(this)">
             </div>
             <div class="fmts-row">
@@ -851,40 +851,40 @@
 
     <!-- CONVERSÃO -->
     <div class="section" id="conversao">
-        <div class="sec-label">Conversão Robusta</div>
-        <h2 class="sec-title">Converta qualquer documento</h2>
-        <p class="sec-sub">Conversão profissional com Smart Repair — tenta múltiplas estratégias até conseguir o melhor resultado possível.</p>
+        <div class="sec-label">Ferramentas de Conversão</div>
+        <h2 class="sec-title">Escolha a conversão desejada</h2>
+        <p class="sec-sub">Selecione o ficheiro acima e clique no tipo de conversão pretendido. O sistema processará automaticamente.</p>
 
         <div class="tools-grid">
             <div class="tool-card" onclick="abrirModalConversao('pdf-word')">
                 <div class="tc-top"><div class="tc-icon" style="background:#eef1fe">📄</div><span class="tc-badge pop">Popular</span></div>
                 <div class="tc-name">PDF → Word</div>
-                <div class="tc-desc">Converta PDF em documento Word (.docx) editável com smart repair.</div>
+                <div class="tc-desc">Converta PDFs em documentos Word (.docx) editáveis. Ideal para ficheiros que precisa de editar.</div>
             </div>
             <div class="tool-card" onclick="abrirModalConversao('pdf-excel')">
                 <div class="tc-top"><div class="tc-icon" style="background:#e8faf4">📊</div><span class="tc-badge new">Novo</span></div>
                 <div class="tc-name">PDF → Excel</div>
-                <div class="tc-desc">Extraia dados e converta para folha de cálculo (.xls) automaticamente.</div>
+                <div class="tc-desc">Extraia dados de tabelas PDF e converta para folha de cálculo Excel (.xls) automaticamente.</div>
             </div>
             <div class="tool-card" onclick="abrirModalConversao('word-pdf')">
                 <div class="tc-top"><div class="tc-icon" style="background:#fdf8ec">📝</div></div>
                 <div class="tc-name">Word → PDF</div>
-                <div class="tc-desc">Transforme ficheiros DOCX em PDF estável e padronizado.</div>
+                <div class="tc-desc">Transforme ficheiros DOCX em PDF profissional e padronizado. Perfeito para impressão e partilha.</div>
             </div>
             <div class="tool-card" onclick="abrirModalConversao('compress')">
                 <div class="tc-top"><div class="tc-icon" style="background:#fce8e8">🗜️</div></div>
                 <div class="tc-name">Comprimir PDF</div>
-                <div class="tc-desc">Reduza tamanho mantendo qualidade visual — até 60% menos espaço.</div>
+                <div class="tc-desc">Reduza o tamanho dos PDFs mantendo qualidade visual. Poupe até 60% de espaço.</div>
             </div>
             <div class="tool-card" onclick="abrirModalConversao('merge')">
                 <div class="tc-top"><div class="tc-icon" style="background:#e8f5f9">🔗</div></div>
                 <div class="tc-name">Juntar PDFs</div>
-                <div class="tc-desc">Combine múltiplos PDFs em um único ficheiro com ordem customizável.</div>
+                <div class="tc-desc">Combine múltiplos PDFs num único ficheiro. Organize e ordene as páginas como deseja.</div>
             </div>
             <div class="tool-card" onclick="abrirModalConversao('split')">
                 <div class="tc-top"><div class="tc-icon" style="background:#f0e8ff">✂️</div></div>
                 <div class="tc-name">Dividir PDF</div>
-                <div class="tc-desc">Extraia páginas específicas ou divida por intervalo automaticamente.</div>
+                <div class="tc-desc">Extraia páginas específicas de um PDF. Crie ficheiros separados por intervalo automaticamente.</div>
             </div>
         </div>
     </div>
@@ -895,20 +895,20 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start;">
                 <div>
                     <div class="sec-label">Assinatura Eletrónica</div>
-                    <h2 class="sec-title">Assine com confiança</h2>
-                    <p class="sec-sub">Assinatura digital com validade legal, trilha de auditoria completa e certificado SHA-256.</p>
+                    <h2 class="sec-title">Assine documentos legalmente</h2>
+                    <p class="sec-sub">Adicione assinatura digital com validade legal aos seus PDFs. Inclui trilha de auditoria completa e certificação automática.</p>
                     <div style="margin-top: 28px;">
                         <div style="margin-bottom: 20px;">
-                            <div style="font-weight: 700; font-size: .85rem; color: var(--txt); margin-bottom: 6px;">✍️ Assinatura Visual</div>
-                            <div style="font-size: .78rem; color: var(--txt-light); line-height: 1.6;">Coloque a sua assinatura exatamente onde quer no PDF, com data e nome automaticamente.</div>
+                            <div style="font-weight: 700; font-size: .85rem; color: var(--txt); margin-bottom: 6px;">✍️ Assinatura Visível</div>
+                            <div style="font-size: .78rem; color: var(--txt-light); line-height: 1.6;">Coloque a sua assinatura exatamente onde quer no PDF. Data, hora e nome são adicionados automaticamente.</div>
                         </div>
                         <div style="margin-bottom: 20px;">
-                            <div style="font-weight: 700; font-size: .85rem; color: var(--txt); margin-bottom: 6px;">🔐 Segurança Garantida</div>
-                            <div style="font-size: .78rem; color: var(--txt-light); line-height: 1.6;">Processamento local com cifra AES-256. Nenhum servidor vê dados sensíveis.</div>
+                            <div style="font-weight: 700; font-size: .85rem; color: var(--txt); margin-bottom: 6px;">🔐 Segurança Total</div>
+                            <div style="font-size: .78rem; color: var(--txt-light); line-height: 1.6;">Processamento local com encriptação AES-256. Os dados sensíveis nunca saem do seu computador.</div>
                         </div>
                         <div>
-                            <div style="font-weight: 700; font-size: .85rem; color: var(--txt); margin-bottom: 6px;">📋 Trilha de Auditoria</div>
-                            <div style="font-size: .78rem; color: var(--txt-light); line-height: 1.6;">Rodapé automático com data, hora, nome e certificado SHA-256 no PDF assinado.</div>
+                            <div style="font-weight: 700; font-size: .85rem; color: var(--txt); margin-bottom: 6px;">📋 Prova de Autenticidade</div>
+                            <div style="font-size: .78rem; color: var(--txt-light); line-height: 1.6;">Rodapé automático com certificado SHA-256. Garante que o documento não foi alterado após assinatura.</div>
                         </div>
                     </div>
                 </div>
@@ -1333,4 +1333,4 @@
 </script>
 
 </body>
-</html>
+</html></html>

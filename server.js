@@ -5,7 +5,6 @@ const fs               = require('fs');
 const crypto           = require('crypto');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const mammoth          = require('mammoth');
-const helmet           = require('helmet');
 const cors             = require('cors');
 const rateLimit        = require('express-rate-limit');
 const compression      = require('compression');
@@ -33,15 +32,28 @@ const logger = winston.createLogger({
    INICIALIZAÇÃO EXPRESS + SEGURANÇA
 ══════════════════════════════════════════════════════ */
 const app = express();
+
+app.use((req, res, next) => {
+    res.removeHeader('Content-Security-Policy');
+    res.removeHeader('X-Frame-Options');
+    res.removeHeader('X-Content-Type-Options');
+    next();
+});
 const PORT = process.env.PORT || 3000;
 const MAX_FILE_SIZE = 200 * 1024 * 1024;
 const CLEANUP_INTERVAL = 60 * 60 * 1000;
  
-app.use(helmet());
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true
 }));
+
+app.use((req, res, next) => {
+    res.removeHeader('Content-Security-Policy');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    next();
+});
 app.use(compression());
 app.use(morgan('combined', { stream: { write: msg => logger.info(msg.trim()) } }));
 app.use(express.json({ limit: '20mb' }));
@@ -694,3 +706,5 @@ app.listen(PORT, () => {
 });
  
 module.exports = app;
+
+

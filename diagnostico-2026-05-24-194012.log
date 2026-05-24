@@ -1,0 +1,20 @@
+﻿RELATORIO DE DIAGNOSTICO DOCFLOW PRO
+====================================
+Data: 24/05/2026 19:40:12
+Maquina: GSMACHINE
+Usuario: geral
+
+STATUS: OK - Sistema pronto para usar
+
+Proximos passos:
+1. Abra http://localhost:3000 no browser
+2. FaÃ§a login com:
+   Email: admin@docflow.ao
+   Senha: Admin@2026
+3. Teste conversao de um PDF
+4. Se houver erro, abra a consola (F12) no browser
+
+Se tiver problemas:
+- Verifique os logs em D:\DocFlow\logs\
+- Verifique se server.js esta rodando
+- Verifique http://localhost:3000/api/health
