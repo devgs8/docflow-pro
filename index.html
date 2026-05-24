@@ -36,7 +36,7 @@
             --sh2: 0 4px 20px rgba(0,0,0,.09);
             --sh3: 0 16px 48px rgba(0,0,0,.13);
         }
-
+ 
         html { scroll-behavior: smooth; }
         body {
             font-family: 'Sora', sans-serif;
@@ -45,7 +45,7 @@
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* NAV */
         /* ════════════════════════════════════════════════════ */
@@ -63,7 +63,7 @@
             padding: 0 44px;
             box-shadow: var(--sh);
         }
-
+ 
         .nav-logo {
             font-size: 1.1rem;
             font-weight: 800;
@@ -74,7 +74,7 @@
             text-decoration: none;
             letter-spacing: -.5px;
         }
-
+ 
         .logo-mark {
             width: 36px;
             height: 36px;
@@ -88,13 +88,13 @@
             font-weight: 800;
             box-shadow: 0 4px 12px rgba(24, 71, 240, .3);
         }
-
+ 
         .nav-center {
             display: flex;
             gap: 40px;
             list-style: none;
         }
-
+ 
         .nav-center a {
             font-size: .88rem;
             font-weight: 600;
@@ -102,15 +102,15 @@
             text-decoration: none;
             transition: color .12s;
         }
-
+ 
         .nav-center a:hover { color: var(--accent); }
-
+ 
         .nav-right {
             display: flex;
             gap: 12px;
             align-items: center;
         }
-
+ 
         .nbtn {
             padding: 10px 22px;
             border-radius: var(--r);
@@ -122,23 +122,23 @@
             border: none;
             letter-spacing: -.1px;
         }
-
+ 
         .nbtn-ghost {
             background: transparent;
             border: 1.5px solid var(--border);
             color: var(--txt-light);
         }
-
+ 
         .nbtn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
+ 
         .nbtn-fill {
             background: var(--accent);
             color: #fff;
             box-shadow: 0 4px 12px rgba(24, 71, 240, .25);
         }
-
+ 
         .nbtn-fill:hover { background: var(--accent-dark); transform: translateY(-1px); }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* HERO */
         /* ════════════════════════════════════════════════════ */
@@ -148,7 +148,7 @@
             margin: 0 auto;
             text-align: center;
         }
-
+ 
         .hero-chip {
             display: inline-flex;
             align-items: center;
@@ -164,7 +164,7 @@
             text-transform: uppercase;
             margin-bottom: 28px;
         }
-
+ 
         .hero-chip::before {
             content: '';
             width: 7px;
@@ -173,9 +173,9 @@
             border-radius: 50%;
             animation: blink 2s ease-in-out infinite;
         }
-
+ 
         @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: .3 } }
-
+ 
         .hero h1 {
             font-size: 3.2rem;
             font-weight: 800;
@@ -184,7 +184,7 @@
             color: var(--txt);
             margin-bottom: 18px;
         }
-
+ 
         .hero h1 em {
             font-style: normal;
             background: linear-gradient(135deg, #1847f0, #1338c8);
@@ -192,7 +192,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
+ 
         .hero-sub {
             font-size: 1.05rem;
             color: var(--txt-light);
@@ -201,7 +201,7 @@
             margin: 0 auto 48px;
             font-weight: 400;
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* UPLOAD CARD */
         /* ════════════════════════════════════════════════════ */
@@ -214,7 +214,7 @@
             max-width: 720px;
             margin: 0 auto 56px;
         }
-
+ 
         .drop-zone {
             border: 2px dashed var(--border);
             border-radius: var(--r2);
@@ -224,14 +224,14 @@
             transition: all .18s;
             background: var(--bg);
         }
-
+ 
         .drop-zone:hover,
         .drop-zone.drag {
             border-color: var(--accent);
             background: var(--accent-light);
             transform: translateY(-2px);
         }
-
+ 
         .drop-icon {
             width: 60px;
             height: 60px;
@@ -243,19 +243,19 @@
             margin: 0 auto 20px;
             font-size: 28px;
         }
-
+ 
         .drop-zone h3 {
             font-size: 1rem;
             font-weight: 700;
             color: var(--txt);
             margin-bottom: 6px;
         }
-
+ 
         .drop-zone p {
             font-size: .85rem;
             color: var(--txt-muted);
         }
-
+ 
         .fmts-row {
             display: flex;
             gap: 8px;
@@ -263,7 +263,7 @@
             flex-wrap: wrap;
             margin-top: 24px;
         }
-
+ 
         .fmt-tag {
             background: var(--white);
             border: 1px solid var(--border);
@@ -274,7 +274,7 @@
             color: var(--txt-light);
             font-family: 'JetBrains Mono', monospace;
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* CONFIANÇA */
         /* ════════════════════════════════════════════════════ */
@@ -290,14 +290,14 @@
             overflow: hidden;
             box-shadow: var(--sh);
         }
-
+ 
         .trust-cell {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 16px 20px;
         }
-
+ 
         .trust-cell svg {
             width: 18px;
             height: 18px;
@@ -305,13 +305,13 @@
             flex-shrink: 0;
             stroke-width: 2.5;
         }
-
+ 
         .trust-cell span {
             font-size: .8rem;
             font-weight: 600;
             color: var(--txt-light);
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* SECÇÕES */
         /* ════════════════════════════════════════════════════ */
@@ -320,7 +320,7 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-
+ 
         .sec-label {
             font-size: .68rem;
             font-weight: 700;
@@ -329,7 +329,7 @@
             color: var(--accent);
             margin-bottom: 12px;
         }
-
+ 
         .sec-title {
             font-size: 2rem;
             font-weight: 800;
@@ -338,7 +338,7 @@
             margin-bottom: 12px;
             line-height: 1.2;
         }
-
+ 
         .sec-sub {
             font-size: .95rem;
             color: var(--txt-light);
@@ -346,7 +346,7 @@
             max-width: 500px;
             margin-bottom: 40px;
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* GRID DE FERRAMENTAS */
         /* ════════════════════════════════════════════════════ */
@@ -355,7 +355,7 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 18px;
         }
-
+ 
         .tool-card {
             background: var(--white);
             border: 1.5px solid var(--border);
@@ -366,7 +366,7 @@
             position: relative;
             overflow: hidden;
         }
-
+ 
         .tool-card::after {
             content: '';
             position: absolute;
@@ -375,22 +375,22 @@
             background: linear-gradient(135deg, rgba(24, 71, 240, .04), transparent);
             transition: opacity .18s;
         }
-
+ 
         .tool-card:hover {
             border-color: var(--accent);
             box-shadow: var(--sh2);
             transform: translateY(-4px);
         }
-
+ 
         .tool-card:hover::after { opacity: 1; }
-
+ 
         .tc-top {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
             margin-bottom: 16px;
         }
-
+ 
         .tc-icon {
             width: 48px;
             height: 48px;
@@ -400,30 +400,30 @@
             justify-content: center;
             font-size: 1.3rem;
         }
-
+ 
         .tc-badge {
             font-size: .64rem;
             font-weight: 700;
             padding: 4px 10px;
             border-radius: 99px;
         }
-
+ 
         .tc-badge.pop { background: var(--accent-light); color: var(--accent); }
         .tc-badge.new { background: var(--green-light); color: var(--green); }
-
+ 
         .tc-name {
             font-size: .92rem;
             font-weight: 700;
             color: var(--txt);
             margin-bottom: 6px;
         }
-
+ 
         .tc-desc {
             font-size: .8rem;
             color: var(--txt-muted);
             line-height: 1.6;
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* PREÇOS (PLANOS) */
         /* ════════════════════════════════════════════════════ */
@@ -433,7 +433,7 @@
             gap: 24px;
             margin-top: 52px;
         }
-
+ 
         .price-card {
             background: var(--white);
             border: 1.5px solid var(--border);
@@ -442,15 +442,15 @@
             position: relative;
             transition: all .2s;
         }
-
+ 
         .price-card.featured {
             border-color: var(--accent);
             box-shadow: 0 0 0 1px var(--accent), var(--sh2);
             transform: scale(1.02);
         }
-
+ 
         .price-card:hover { transform: translateY(-6px); box-shadow: var(--sh2); }
-
+ 
         .price-card.featured::before {
             content: 'MAIS POPULAR';
             position: absolute;
@@ -465,38 +465,38 @@
             border-radius: 99px;
             letter-spacing: .5px;
         }
-
+ 
         .plan-name {
             font-size: 1.1rem;
             font-weight: 800;
             color: var(--txt);
             margin-bottom: 8px;
         }
-
+ 
         .plan-price {
             font-size: 2.4rem;
             font-weight: 800;
             color: var(--accent);
             margin-bottom: 4px;
         }
-
+ 
         .plan-price span {
             font-size: .85rem;
             color: var(--txt-light);
             font-weight: 600;
         }
-
+ 
         .plan-desc {
             font-size: .8rem;
             color: var(--txt-muted);
             margin-bottom: 28px;
         }
-
+ 
         .plan-features {
             list-style: none;
             margin-bottom: 28px;
         }
-
+ 
         .plan-features li {
             font-size: .85rem;
             color: var(--txt-light);
@@ -506,14 +506,14 @@
             align-items: center;
             gap: 10px;
         }
-
+ 
         .plan-features li::before {
             content: '✓';
             color: var(--green);
             font-weight: 700;
             flex-shrink: 0;
         }
-
+ 
         .plan-btn {
             width: 100%;
             padding: 13px;
@@ -528,10 +528,10 @@
             transition: all .15s;
             box-shadow: 0 3px 12px rgba(24, 71, 240, .25);
         }
-
+ 
         .plan-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
         .plan-btn:disabled { opacity: .6; cursor: not-allowed; }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* MODAL */
         /* ════════════════════════════════════════════════════ */
@@ -546,9 +546,9 @@
             padding: 20px;
             backdrop-filter: blur(8px);
         }
-
+ 
         .modal-bg.open { display: flex; }
-
+ 
         .modal {
             background: var(--white);
             border: 1.5px solid var(--border);
@@ -560,12 +560,12 @@
             position: relative;
             animation: slideUp .3s ease;
         }
-
+ 
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
+ 
         .modal-close {
             position: absolute;
             top: 16px;
@@ -583,22 +583,22 @@
             justify-content: center;
             transition: all .12s;
         }
-
+ 
         .modal-close:hover { background: var(--border); color: var(--txt); }
-
+ 
         .modal h2 {
             font-size: 1.24rem;
             font-weight: 800;
             margin-bottom: 8px;
         }
-
+ 
         .modal > p {
             font-size: .85rem;
             color: var(--txt-light);
             margin-bottom: 24px;
             line-height: 1.6;
         }
-
+ 
         .modal-upload {
             border: 2px dashed var(--border);
             border-radius: var(--r2);
@@ -608,20 +608,20 @@
             transition: all .15s;
             margin-bottom: 20px;
         }
-
+ 
         .modal-upload:hover {
             border-color: var(--accent);
             background: var(--accent-light);
         }
-
+ 
         .modal-upload .mu-icon { font-size: 2.4rem; margin-bottom: 12px; }
         .modal-upload .mu-title { font-size: .88rem; font-weight: 700; margin-bottom: 4px; color: var(--txt); }
         .modal-upload .mu-sub { font-size: .78rem; color: var(--txt-muted); }
-
+ 
         .form-group {
             margin-bottom: 18px;
         }
-
+ 
         .form-label {
             display: block;
             font-size: .76rem;
@@ -631,7 +631,7 @@
             text-transform: uppercase;
             letter-spacing: .5px;
         }
-
+ 
         .form-input,
         .form-select {
             width: 100%;
@@ -646,20 +646,20 @@
             color: var(--txt);
             transition: border-color .12s;
         }
-
+ 
         .form-input:focus,
         .form-select:focus {
             border-color: var(--accent);
             background: var(--white);
         }
-
+ 
         .mprogress {
             display: none;
             margin-top: 16px;
         }
-
+ 
         .mprogress.show { display: block; }
-
+ 
         .mpb {
             height: 6px;
             background: var(--border);
@@ -667,20 +667,20 @@
             overflow: hidden;
             margin-bottom: 8px;
         }
-
+ 
         .mpbf {
             height: 100%;
             background: linear-gradient(90deg, var(--accent), var(--accent-dark));
             width: 0;
             transition: width .12s;
         }
-
+ 
         .mpb-label {
             font-size: .76rem;
             color: var(--txt-muted);
             text-align: center;
         }
-
+ 
         .download-box {
             background: var(--green-light);
             border: 1px solid #a7f3d0;
@@ -690,16 +690,16 @@
             display: none;
             text-align: center;
         }
-
+ 
         .download-box.show { display: block; animation: slideUp .3s ease; }
-
+ 
         .download-box p {
             color: var(--green);
             font-size: .85rem;
             font-weight: 700;
             margin-bottom: 14px;
         }
-
+ 
         .btn-download {
             width: 100%;
             padding: 13px;
@@ -713,9 +713,9 @@
             cursor: pointer;
             transition: all .12s;
         }
-
+ 
         .btn-download:hover { background: #087a52; }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* AUTH MODAL */
         /* ════════════════════════════════════════════════════ */
@@ -724,7 +724,7 @@
             border-bottom: 1px solid var(--border);
             margin-bottom: 24px;
         }
-
+ 
         .auth-tab {
             flex: 1;
             padding: 12px;
@@ -738,9 +738,9 @@
             border-bottom: 2px solid transparent;
             transition: all .12s;
         }
-
+ 
         .auth-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
-
+ 
         .auth-msg {
             display: none;
             margin-top: 18px;
@@ -750,10 +750,10 @@
             font-weight: 600;
             line-height: 1.5;
         }
-
+ 
         .auth-msg.ok { display: block; background: var(--green-light); color: var(--green); }
         .auth-msg.err { display: block; background: var(--red-light); color: var(--red); }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* FOOTER */
         /* ════════════════════════════════════════════════════ */
@@ -764,19 +764,19 @@
             margin-top: 92px;
             text-align: center;
         }
-
+ 
         footer p {
             font-size: .8rem;
             color: var(--txt-light);
             margin-bottom: 8px;
         }
-
+ 
         footer a {
             color: var(--accent);
             text-decoration: none;
             font-weight: 600;
         }
-
+ 
         /* ════════════════════════════════════════════════════ */
         /* RESPONSIVE */
         /* ════════════════════════════════════════════════════ */
@@ -792,10 +792,10 @@
     </style>
 </head>
 <body>
-
+ 
 <!-- ═══════════ HOMEPAGE ═══════════ -->
 <div id="layoutHome">
-
+ 
     <!-- NAV -->
     <nav>
         <a class="nav-logo" href="#inicio">
@@ -811,13 +811,13 @@
             <button class="nbtn nbtn-ghost" id="btnEntrar">Entrar</button>
         </div>
     </nav>
-
+ 
     <!-- HERO -->
     <div class="hero" id="inicio">
         <div class="hero-chip">Conversor de documentos profissional</div>
         <h1>Converta.<br>Assine.<br><em>Entregue.</em></h1>
         <p class="hero-sub">PDF para Word, Excel e muito mais. Assinatura eletrónica com validade legal. Sem complicações, sem limites de privacidade.</p>
-
+ 
         <div class="upload-card">
             <div class="drop-zone" id="dropZone" onclick="document.getElementById('inputFile').click()">
                 <div class="drop-icon">📤</div>
@@ -832,7 +832,7 @@
                 <span class="fmt-tag">JPG</span><span class="fmt-tag">PNG</span>
             </div>
         </div>
-
+ 
         <div class="trust-row">
             <div class="trust-cell">
                 <svg fill="none" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -848,13 +848,13 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- CONVERSÃO -->
     <div class="section" id="conversao">
         <div class="sec-label">Ferramentas de Conversão</div>
         <h2 class="sec-title">Escolha a conversão desejada</h2>
         <p class="sec-sub">Selecione o ficheiro acima e clique no tipo de conversão pretendido. O sistema processará automaticamente.</p>
-
+ 
         <div class="tools-grid">
             <div class="tool-card" onclick="abrirModalConversao('pdf-word')">
                 <div class="tc-top"><div class="tc-icon" style="background:#eef1fe">📄</div><span class="tc-badge pop">Popular</span></div>
@@ -888,7 +888,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- ASSINATURA -->
     <div style="background: var(--white); border-top: 1.5px solid var(--border); border-bottom: 1.5px solid var(--border);">
         <div class="section" id="assinatura" style="padding-top: 0; padding-bottom: 0;">
@@ -932,13 +932,13 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- PREÇOS -->
     <div class="section" id="precos">
         <div class="sec-label">Planos Flexíveis</div>
         <h2 class="sec-title">Escolha o seu plano</h2>
         <p class="sec-sub">Desde utilizadores ocasionais até empresas — temos o plano certo para si.</p>
-
+ 
         <div class="pricing-grid">
             <div class="price-card">
                 <div class="plan-name">Free</div>
@@ -982,41 +982,41 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- FOOTER -->
     <footer>
         <p><strong>DocFlow Pro v2.0</strong> — Conversor PDF robusto, privado e inovador</p>
         <p>© 2024 DocFlow. Todos os direitos reservados. <a href="#">Privacidade</a> · <a href="#">Termos</a></p>
     </footer>
-
+ 
 </div><!-- /layoutHome -->
-
+ 
 <!-- ═══════════ MODAL CONVERSÃO ═══════════ -->
 <div class="modal-bg" id="modalConversao">
     <div class="modal">
         <button class="modal-close" onclick="fecharModal()">&times;</button>
         <h2 id="modalTitle">Converter Documento</h2>
         <p id="modalDesc">Selecione um ficheiro para começar a conversão.</p>
-
+ 
         <div class="modal-upload" onclick="document.getElementById('inputModalFile').click()">
             <div class="mu-icon">📤</div>
             <div class="mu-title" id="uploadTitle">Clique para escolher ficheiro</div>
             <div class="mu-sub">Máx. 200MB · PDF, DOCX, XLSX</div>
             <input type="file" id="inputModalFile" style="display:none" onchange="processarFicheiroModal(this)">
         </div>
-
+ 
         <div class="mprogress" id="modalProgress">
             <div class="mpb"><div class="mpbf" id="modalBarFill"></div></div>
             <div class="mpb-label" id="labelProgress">A processar...</div>
         </div>
-
+ 
         <div class="download-box" id="boxDownload">
             <p>✨ Conversão concluída com sucesso!</p>
             <button class="btn-download" onclick="baixarFicheiro()">Descarregar ficheiro ↓</button>
         </div>
     </div>
 </div>
-
+ 
 <!-- ═══════════ MODAL AUTH ═══════════ -->
 <div class="modal-bg" id="modalAuth">
     <div class="modal" style="max-width: 450px;">
@@ -1025,7 +1025,7 @@
             <button class="auth-tab on" id="tabLogin" onclick="mudarAbaSessao('login')">Entrar</button>
             <button class="auth-tab" id="tabRegister" onclick="mudarAbaSessao('register')">Criar Conta</button>
         </div>
-
+ 
         <!-- LOGIN -->
         <div id="formLogin">
             <div class="form-group">
@@ -1038,7 +1038,7 @@
             </div>
             <button class="plan-btn" id="btnLogin" onclick="submeterLogin()">Entrar →</button>
         </div>
-
+ 
         <!-- REGISTER -->
         <div id="formRegister" style="display:none;">
             <div class="form-group">
@@ -1055,11 +1055,11 @@
             </div>
             <button class="plan-btn" onclick="submeterRegisto()">Criar Conta Grátis →</button>
         </div>
-
+ 
         <div id="authMsg" class="auth-msg"></div>
     </div>
 </div>
-
+ 
 <script>
     /* ══════════════════════════════════════════════════════
        INIT PDF.js
@@ -1067,10 +1067,10 @@
     window.addEventListener('DOMContentLoaded', () => {
         pdfjsLib.GlobalWorkerOptions.workerSrc =
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
+ 
         document.getElementById('btnEntrar').onclick = abrirAuth;
         verificarSessaoInicio();
-
+ 
         /* Drag & drop */
         const dz = document.getElementById('dropZone');
         dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
@@ -1083,7 +1083,7 @@
             }
         });
     });
-
+ 
     /* ══════════════════════════════════════════════════════
        STATE
     ══════════════════════════════════════════════════════ */
@@ -1092,7 +1092,7 @@
     let modoConversao = 'pdf-word';
     let ficheiroPendente = null;
     let urlDownload = null;
-
+ 
     /* ══════════════════════════════════════════════════════
        AUTH
     ══════════════════════════════════════════════════════ */
@@ -1104,11 +1104,11 @@
         }
         document.getElementById('modalAuth').classList.add('open');
     }
-
+ 
     function fecharAuth() {
         document.getElementById('modalAuth').classList.remove('open');
     }
-
+ 
     function mudarAbaSessao(modo) {
         ['login', 'register'].forEach(m => {
             document.getElementById(`form${m === 'login' ? 'Login' : 'Register'}`).style.display = m === modo ? 'block' : 'none';
@@ -1116,22 +1116,22 @@
         });
         document.getElementById('authMsg').className = 'auth-msg';
     }
-
+ 
     function mostrarMsgAuth(msg, tipo) {
         const el = document.getElementById('authMsg');
         el.className = `auth-msg ${tipo}`;
         el.textContent = msg;
     }
-
+ 
     async function submeterLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const senha = document.getElementById('loginSenha').value;
         if (!email || !senha) { mostrarMsgAuth('Preencha email e senha.', 'err'); return; }
-
+ 
         const btn = document.getElementById('btnLogin');
         btn.disabled = true;
         mostrarMsgAuth('A autenticar...', 'ok');
-
+ 
         try {
             const r = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -1140,7 +1140,7 @@
             });
             const d = await r.json();
             if (!r.ok) { mostrarMsgAuth(d.error || 'Erro de autenticação.', 'err'); btn.disabled = false; return; }
-
+ 
             guardarSessao(d);
             mostrarMsgAuth('✔ Bem-vindo, ' + d.nome + '!', 'ok');
             setTimeout(fecharAuth, 1200);
@@ -1149,13 +1149,13 @@
         }
         btn.disabled = false;
     }
-
+ 
     async function submeterRegisto() {
         const nome = document.getElementById('regNome').value.trim();
         const email = document.getElementById('regEmail').value.trim();
         const senha = document.getElementById('regSenha').value;
         if (!nome || !email || !senha) { mostrarMsgAuth('Preencha todos os campos.', 'err'); return; }
-
+ 
         mostrarMsgAuth('A criar conta...', 'ok');
         try {
             const r = await fetch('/api/auth/register', {
@@ -1165,7 +1165,7 @@
             });
             const d = await r.json();
             if (!r.ok) { mostrarMsgAuth(d.error || 'Erro ao criar conta.', 'err'); return; }
-
+ 
             guardarSessao(d);
             mostrarMsgAuth('✔ Conta criada! Bem-vindo, ' + d.nome + '!', 'ok');
             setTimeout(fecharAuth, 1500);
@@ -1173,7 +1173,7 @@
             mostrarMsgAuth('Servidor não disponível.', 'err');
         }
     }
-
+ 
     function guardarSessao(data) {
         authToken = data.token;
         authUser = { nome: data.nome, email: data.email, role: data.role, plano: data.plano };
@@ -1181,7 +1181,7 @@
         localStorage.setItem('df_user', JSON.stringify(authUser));
         atualizarBtnEntrar();
     }
-
+ 
     function atualizarBtnEntrar() {
         const btn = document.getElementById('btnEntrar');
         if (authUser) {
@@ -1200,7 +1200,7 @@
             btn.onclick = abrirAuth;
         }
     }
-
+ 
     async function verificarSessaoInicio() {
         atualizarBtnEntrar();
         if (!authToken) return;
@@ -1216,7 +1216,7 @@
         } catch (e) { }
         atualizarBtnEntrar();
     }
-
+ 
     /* ══════════════════════════════════════════════════════
        CONVERSÃO
     ══════════════════════════════════════════════════════ */
@@ -1240,11 +1240,11 @@
         document.getElementById('modalBarFill').style.width = '0%';
         document.getElementById('modalConversao').classList.add('open');
     }
-
+ 
     function fecharModal() {
         document.getElementById('modalConversao').classList.remove('open');
     }
-
+ 
     function selecionarFicheiro(input) {
         if (!input.files || !input.files[0]) return;
         ficheiroPendente = input.files[0];
@@ -1252,66 +1252,66 @@
         document.getElementById('inputModalFile').files = input.files;
         processarFicheiroModal({ files: input.files });
     }
-
+ 
     function processarFicheiroModal(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
         document.getElementById('uploadTitle').textContent = file.name;
         document.getElementById('modalProgress').classList.add('show');
-
+ 
         const fill = document.getElementById('modalBarFill');
         const lbl = document.getElementById('labelProgress');
-
+ 
         fill.style.transition = 'width .25s';
         fill.style.width = '15%';
         lbl.textContent = 'A ler ficheiro...';
-
+ 
         setTimeout(() => { fill.style.width = '55%'; lbl.textContent = 'A processar...'; }, 300);
         setTimeout(() => { fill.style.width = '90%'; lbl.textContent = 'A finalizar...'; }, 700);
-
+ 
         setTimeout(async () => {
             fill.style.width = '100%';
             await converterFicheiro(file);
         }, 1000);
     }
-
+ 
     async function converterFicheiro(file) {
         try {
             const formData = new FormData();
             formData.append('file', file);
-
+ 
             const endpoints = {
                 'word-pdf': '/api/convert/word-pdf',
                 'pdf-word': '/api/convert/pdf-word',
                 'pdf-excel': '/api/convert/pdf-excel',
                 'compress': '/api/compress-pdf'
             };
-
+ 
             const endpoint = endpoints[modoConversao];
             if (!endpoint) {
                 alert('Modo de conversão não disponível ainda.');
                 return;
             }
-
+ 
             document.getElementById('labelProgress').textContent = 'A enviar para o servidor...';
-
+ 
             const r = await fetch(endpoint, { method: 'POST', body: formData });
             const data = await r.json();
-
+ 
             if (!r.ok || !data.ok) {
                 alert('Erro: ' + (data.error || 'Conversão falhou'));
                 return;
             }
-
+ 
             urlDownload = data.downloadUrl;
             document.getElementById('modalProgress').classList.remove('show');
             document.getElementById('boxDownload').classList.add('show');
-
+ 
         } catch (err) {
             alert('Erro: ' + err.message);
         }
     }
-
+ 
     function baixarFicheiro() {
         if (!urlDownload) return;
         const link = document.createElement('a');
@@ -1322,7 +1322,7 @@
         document.body.removeChild(link);
         fecharModal();
     }
-
+ 
     /* ══════════════════════════════════════════════════════
        ASSINATURA
     ══════════════════════════════════════════════════════ */
@@ -1331,6 +1331,7 @@
         abrirModalConversao('pdf-word');
     }
 </script>
-
+ 
 </body>
-</html></html>
+</html>
+
