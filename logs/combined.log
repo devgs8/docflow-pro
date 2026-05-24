@@ -1,0 +1,15 @@
+{"level":"info","message":"✅ Conta admin criada automaticamente","service":"docflow-pro","timestamp":"2026-05-24 18:43:49"}
+{"level":"info","message":"✅ DocFlow Pro v2.0 iniciado","port":3000,"service":"docflow-pro","timestamp":"2026-05-24 18:43:49"}
+{"level":"info","message":"✅ DocFlow Pro v2.0 iniciado","port":3000,"service":"docflow-pro","timestamp":"2026-05-24 18:43:51"}
+{"level":"info","message":"✅ DocFlow Pro v2.0 iniciado","port":3000,"service":"docflow-pro","timestamp":"2026-05-24 18:43:58"}
+{"level":"info","message":"::1 - - [24/May/2026:17:44:53 +0000] \"GET / HTTP/1.1\" 200 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:44:53"}
+{"level":"info","message":"::1 - - [24/May/2026:17:44:58 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:44:58"}
+{"level":"info","message":"::1 - - [24/May/2026:17:51:01 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:51:01"}
+{"level":"info","message":"✅ DocFlow Pro v2.0 iniciado","port":3000,"service":"docflow-pro","timestamp":"2026-05-24 18:51:37"}
+{"level":"info","message":"::1 - - [24/May/2026:17:52:08 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:52:08"}
+{"level":"info","message":"✅ DocFlow Pro v2.0 iniciado","port":3000,"service":"docflow-pro","timestamp":"2026-05-24 18:53:40"}
+{"level":"info","message":"::1 - - [24/May/2026:17:53:47 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:53:47"}
+{"level":"info","message":"::1 - - [24/May/2026:17:53:48 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:53:48"}
+{"level":"info","message":"✅ DocFlow Pro v2.0 iniciado","port":3000,"service":"docflow-pro","timestamp":"2026-05-24 18:59:13"}
+{"level":"info","message":"::1 - - [24/May/2026:17:59:21 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 18:59:21"}
+{"level":"info","message":"::1 - - [24/May/2026:18:01:50 +0000] \"GET / HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","service":"docflow-pro","timestamp":"2026-05-24 19:01:50"}

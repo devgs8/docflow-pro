@@ -1,0 +1,16 @@
+[
+  {
+    "id": "6f66fcfc-863a-4692-a4e3-0a1b7f2d1b02",
+    "nome": "Administrador",
+    "email": "admin@docflow.ao",
+    "hash": "9c4739f60055b6e4c3bf85cbb8d60390574ad587904359b4dfebe0240bd059f7",
+    "salt": "960b657c21bed30e5922adbc411cb4b7",
+    "role": "admin",
+    "plano": "empresarial",
+    "conversoes": {
+      "usadas": 0,
+      "limite": -1
+    },
+    "criadoEm": "2026-05-24T17:43:49.318Z"
+  }
+]
