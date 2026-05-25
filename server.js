@@ -66,6 +66,67 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'test-word.html'));
 });
 
+
+async function dividirPDF(caminhoOrigem, paginaInicio, paginaFim) {
+  try {
+    const pdfBytes = fs.readFileSync(caminhoOrigem);
+    const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+    const numPaginas = pdfDoc.getPageCount();
+    
+    // Validar páginas
+    const inicio = Math.max(1, paginaInicio || 1);
+    const fim = Math.min(numPaginas, paginaFim || numPaginas);
+    
+    if (inicio > fim || inicio > numPaginas) {
+      throw new Error('Intervalo de paginas invalido');
+    }
+    
+    // Criar novo PDF
+    const novoDoc = await PDFDocument.create();
+    
+    // Copiar páginas
+    for (let i = inicio - 1; i < fim; i++) {
+      const pagina = pdfDoc.getPage(i);
+      const copiadaPagina = await novoDoc.embedPage(pagina);
+      const { width, height } = pagina.getSize();
+      novoDoc.addPage([width, height], copiadaPagina);
+    }
+    
+    const pdfSalvo = await novoDoc.save();
+    const caminhoSaida = path.join(__dirname, 'temp', uuid() + '.pdf');
+    fs.writeFileSync(caminhoSaida, pdfSalvo);
+    
+    return caminhoSaida;
+  } catch (err) {
+    throw err;
+  }
+}
+
+
+app.post('/api/split/pdf', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Ficheiro faltando' });
+    
+    const paginaInicio = parseInt(req.body.inicio || 1);
+    const paginaFim = parseInt(req.body.fim || 999);
+    
+    const caminhoOrigem = req.file.path;
+    const caminhoSaida = await dividirPDF(caminhoOrigem, paginaInicio, paginaFim);
+    
+    const outputFilename = 'dividido_' + uuid() + '.pdf';
+    const outputPath = path.join(__dirname, 'outputs', outputFilename);
+    fs.copyFileSync(caminhoSaida, outputPath);
+    fs.unlinkSync(caminhoOrigem);
+    fs.unlinkSync(caminhoSaida);
+    
+    res.json({ ok: true, downloadUrl: '/outputs/' + outputFilename });
+  } catch (err) {
+    if (req.file) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(3000, () => {
   console.log('Servidor: http://localhost:3000');
 });
+

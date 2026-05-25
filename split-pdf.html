@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dividir PDF</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #f5f7fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        h1 { color: #333; }
+        input, button { padding: 10px; margin: 10px 0; }
+        input[type="file"] { width: 100%; }
+        input[type="number"] { width: 80px; }
+        button { background: #667eea; color: white; border: none; cursor: pointer; width: 100%; }
+        button:hover { background: #764ba2; }
+        #resultado { margin-top: 20px; padding: 15px; background: #e8faf4; border-radius: 4px; display: none; }
+        .erro { background: #fef0f0; color: #d42020; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dividir PDF</h1>
+        <p>Extraia páginas específicas de um PDF</p>
+        
+        <input type="file" id="file" accept=".pdf">
+        
+        <label>Página Início: <input type="number" id="inicio" value="1" min="1"></label>
+        <label>Página Fim: <input type="number" id="fim" value="999" min="1"></label>
+        
+        <button onclick="dividir()">Dividir PDF</button>
+        
+        <div id="resultado"></div>
+    </div>
+    
+    <script>
+        async function dividir() {
+            const file = document.getElementById('file').files[0];
+            if (!file) { alert('Selecione um PDF'); return; }
+            
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+            
+            const form = new FormData();
+            form.append('file', file);
+            form.append('inicio', inicio);
+            form.append('fim', fim);
+            
+            try {
+                const res = await fetch('/api/split/pdf', {method: 'POST', body: form});
+                const data = await res.json();
+                
+                if (data.ok) {
+                    const div = document.getElementById('resultado');
+                    div.innerHTML = `✅ PDF dividido!<br><a href="${data.downloadUrl}">Download</a>`;
+                    div.style.display = 'block';
+                    
+                    const a = document.createElement('a');
+                    a.href = data.downloadUrl;
+                    a.download = data.downloadUrl.split('/').pop();
+                    a.click();
+                } else {
+                    document.getElementById('resultado').innerHTML = `Erro: ${data.error}`;
+                    document.getElementById('resultado').classList.add('erro');
+                    document.getElementById('resultado').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('resultado').innerHTML = `Erro: ${err.message}`;
+                document.getElementById('resultado').classList.add('erro');
+                document.getElementById('resultado').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
