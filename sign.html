@@ -1,0 +1,383 @@
+﻿<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocFlow Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Satisfy&family=Allura&family=Caveat:wght@700&family=Indie+Flower&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; background: #f5f7fa; }
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .navbar h1 { font-size: 32px; margin-bottom: 5px; }
+        .modulos { display: flex; gap: 10px; margin-top: 15px; }
+        .modulo-btn { padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; cursor: pointer; border-radius: 6px; font-weight: 600; }
+        .modulo-btn.active { background: white; color: #667eea; }
+        .container { max-width: 1600px; margin: 30px auto; padding: 0 20px; }
+        .modulo { display: none; }
+        .modulo.active { display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; }
+        .panel { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .panel h2 { font-size: 18px; color: #333; margin-bottom: 20px; border-bottom: 2px solid #667eea; padding-bottom: 12px; }
+        #pdf-area { border: 2px solid #ddd; border-radius: 8px; min-height: 600px; position: relative; overflow: auto; background: white; }
+        #pdf-canvas { display: block; margin: 0 auto; }
+        .signature-overlay { position: absolute; cursor: move; border: 2px dashed #667eea; background: transparent; user-select: none; }
+        .signature-overlay canvas { display: block; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab { padding: 10px; cursor: pointer; border-bottom: 3px solid transparent; color: #666; font-weight: 600; }
+        .tab.active { border-bottom-color: #667eea; color: #667eea; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .font-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .font-option { padding: 12px; border: 2px solid #ddd; cursor: pointer; text-align: center; font-size: 24px; }
+        .font-option.active { border-color: #667eea; background: #667eea; color: white; }
+        .canvas-drawing { border: 2px dashed #667eea; background: white; width: 100%; margin-bottom: 12px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; color: #666; font-weight: 600; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 100%; margin-bottom: 10px; }
+        .btn-small { padding: 8px 12px; font-size: 12px; background: #f0f0f0; }
+        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-box { background: #f0f8ff; border-left: 4px solid #667eea; padding: 12px; margin-bottom: 15px; font-size: 13px; }
+        .file-input-label { display: block; padding: 12px 20px; background: #667eea; color: white; text-align: center; cursor: pointer; margin-bottom: 20px; font-weight: 600; }
+        .preview-box { border: 2px solid #ddd; padding: 20px; background: #f9f9f9; min-height: 100px; margin: 15px 0; display: flex; align-items: center; justify-content: center; }
+        .preview-box canvas { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>DocFlow Pro</h1>
+        <div class="modulos">
+            <button class="modulo-btn active" onclick="mudarModulo('assinatura')">✍️ Assinatura Digital</button>
+            <button class="modulo-btn" onclick="mudarModulo('editor')">📝 Editar Documento</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- MODULO ASSINATURA -->
+        <div id="modulo-assinatura" class="modulo active">
+            <div class="panel">
+                <h2>Seu Documento</h2>
+                <div class="info-box">Arraste para posicionar a assinatura exactamente</div>
+                <input type="file" id="file-input" accept=".pdf" style="display: none;">
+                <label class="file-input-label" for="file-input">Carregar PDF</label>
+                <div id="pdf-area"><canvas id="pdf-canvas"></canvas></div>
+            </div>
+
+            <div class="panel">
+                <h2>Sua Assinatura</h2>
+                <div class="tabs">
+                    <div class="tab active" onclick="mudarAba(event, 'desenho')">Desenhar</div>
+                    <div class="tab" onclick="mudarAba(event, 'texto')">Texto</div>
+                </div>
+
+                <div id="aba-desenho" class="tab-content active">
+                    <label>Desenhe:</label>
+                    <canvas id="draw-canvas" class="canvas-drawing" width="260" height="90"></canvas>
+                    <div class="control-row">
+                        <button class="btn btn-small" onclick="limparDesenho()">Limpar</button>
+                        <button class="btn btn-small" onclick="desfazerDesenho()">Desfazer</button>
+                    </div>
+                </div>
+
+                <div id="aba-texto" class="tab-content">
+                    <div class="form-group">
+                        <label>Sua Assinatura</label>
+                        <input type="text" id="sig-text" placeholder="Joao Silva" oninput="atualizarPreviewTexto()">
+                    </div>
+                    <label style="font-size: 12px;">Estilo:</label>
+                    <div class="font-grid" id="fonte-grid"></div>
+                </div>
+
+                <label style="font-size: 12px; margin-top: 20px;">Preview:</label>
+                <div class="preview-box" id="preview">Sua assinatura aqui</div>
+
+                <div class="control-row">
+                    <div class="form-group">
+                        <label>Ajuste X</label>
+                        <input type="number" id="ajuste-x" value="0" min="-50" max="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Ajuste Y</label>
+                        <input type="number" id="ajuste-y" value="0" min="-50" max="50">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="guardarAssinatura()">Guardar</button>
+                    <button class="btn btn-primary" onclick="downloadAssinatura()">Download</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULO EDITOR -->
+        <div id="modulo-editor" class="modulo">
+            <div class="panel">
+                <h2>Seu Documento</h2>
+                <div class="info-box">Carregue um PDF para editar</div>
+                <input type="file" id="file-input-editor" accept=".pdf" style="display: none;">
+                <label class="file-input-label" for="file-input-editor">Carregar PDF para Editar</label>
+                <div id="pdf-area-editor"><canvas id="pdf-canvas-editor"></canvas></div>
+            </div>
+
+            <div class="panel">
+                <h2>Ferramentas</h2>
+                <div class="form-group">
+                    <label>Adicionar Texto</label>
+                    <input type="text" id="editor-text" placeholder="Digite o texto aqui">
+                </div>
+                <button class="btn btn-primary">Em Breve...</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script>
+        let drawCanvas, drawCtx, desenhando = false, historicoDesenho = [];
+        let pdfDoc = null, fonteSelecionada = 'Great Vibes';
+        let tipoAssinaturaAtual = 'desenho';
+        let ficheroCarregado = null;
+        let pdfScale = 1.2;
+        let pdfPageHeight = 0;
+        let ultimoPdfAssinado = null;
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // MODULOS
+        function mudarModulo(modulo) {
+            document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.modulo-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('modulo-' + modulo).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            drawCanvas = document.getElementById('draw-canvas');
+            drawCtx = drawCanvas.getContext('2d');
+            drawCanvas.addEventListener('mousedown', iniciarDesenho);
+            drawCanvas.addEventListener('mousemove', desenharLinhas);
+            drawCanvas.addEventListener('mouseup', () => desenhando = false);
+            document.getElementById('file-input').addEventListener('change', carregarFicheiro);
+            criarFontes();
+            atualizarPreview();
+        });
+
+        function iniciarDesenho(e) {
+            desenhando = true;
+            historicoDesenho.push(drawCanvas.toDataURL());
+            const rect = drawCanvas.getBoundingClientRect();
+            drawCtx.beginPath();
+            drawCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function desenharLinhas(e) {
+            if (!desenhando) return;
+            const rect = drawCanvas.getBoundingClientRect();
+            drawCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            drawCtx.strokeStyle = '#000';
+            drawCtx.lineWidth = 2;
+            drawCtx.lineCap = 'round';
+            drawCtx.lineJoin = 'round';
+            drawCtx.stroke();
+            atualizarPreview();
+        }
+
+        function limparDesenho() { 
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height); 
+            atualizarPreview(); 
+        }
+
+        function desfazerDesenho() {
+            if (historicoDesenho.length > 0) {
+                const img = new Image();
+                img.src = historicoDesenho.pop();
+                img.onload = () => { 
+                    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height); 
+                    drawCtx.drawImage(img, 0, 0); 
+                    atualizarPreview(); 
+                };
+            }
+        }
+
+        function criarFontes() {
+            const fontes = ['Great Vibes', 'Satisfy', 'Allura', 'Caveat', 'Indie Flower'];
+            const container = document.getElementById('fonte-grid');
+            fontes.forEach((fonte, i) => {
+                const div = document.createElement('div');
+                div.className = 'font-option' + (i === 0 ? ' active' : '');
+                div.style.fontFamily = fonte;
+                div.textContent = 'Assinatura';
+                div.onclick = () => selecionarFonte(div, fonte);
+                container.appendChild(div);
+            });
+        }
+
+        function selecionarFonte(elem, fonte) {
+            document.querySelectorAll('.font-option').forEach(e => e.classList.remove('active'));
+            elem.classList.add('active');
+            fonteSelecionada = fonte;
+            atualizarPreviewTexto();
+        }
+
+        function atualizarPreviewTexto() {
+            const texto = document.getElementById('sig-text').value || 'Assinatura';
+            const canvas = criarCanvasAssinatura(texto);
+            const preview = document.getElementById('preview');
+            preview.innerHTML = '';
+            preview.appendChild(canvas);
+            mostrarAssinaturaNoPDF();
+        }
+
+        function atualizarPreview() {
+            const preview = document.getElementById('preview');
+            if (tipoAssinaturaAtual === 'desenho') {
+                const canvas = document.createElement('canvas');
+                canvas.width = drawCanvas.width;
+                canvas.height = drawCanvas.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(drawCanvas, 0, 0);
+                preview.innerHTML = '';
+                preview.appendChild(canvas);
+            } else {
+                atualizarPreviewTexto();
+            }
+            mostrarAssinaturaNoPDF();
+        }
+
+        function mudarAba(event, aba) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('aba-' + aba).classList.add('active');
+            event.target.classList.add('active');
+            tipoAssinaturaAtual = aba;
+            atualizarPreview();
+        }
+
+        async function carregarFicheiro() {
+            const file = document.getElementById('file-input').files[0];
+            if (file) await carregarPdfFile(file);
+        }
+
+        async function carregarPdfFile(file) {
+            ficheroCarregado = file;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const pdf = await pdfjsLib.getDocument(e.target.result).promise;
+                pdfDoc = pdf;
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({scale: 1});
+                pdfPageHeight = viewport.height;
+                const canvas = document.getElementById('pdf-canvas');
+                const ctx = canvas.getContext('2d');
+                const viewportScaled = page.getViewport({scale: pdfScale});
+                canvas.width = viewportScaled.width;
+                canvas.height = viewportScaled.height;
+                await page.render({canvasContext: ctx, viewport: viewportScaled}).promise;
+                mostrarAssinaturaNoPDF();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function criarCanvasAssinatura(texto) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 80;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '32px ' + fonteSelecionada;
+            ctx.fillStyle = '#000000';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(texto, 10, 40);
+            return canvas;
+        }
+
+        function mostrarAssinaturaNoPDF() {
+            if (!pdfDoc) return;
+            let assinCanvas;
+            if (tipoAssinaturaAtual === 'desenho') {
+                assinCanvas = document.createElement('canvas');
+                assinCanvas.width = drawCanvas.width;
+                assinCanvas.height = drawCanvas.height;
+                const ctx = assinCanvas.getContext('2d');
+                ctx.drawImage(drawCanvas, 0, 0);
+            } else {
+                const texto = document.getElementById('sig-text').value || 'Assinatura';
+                assinCanvas = criarCanvasAssinatura(texto);
+            }
+            
+            let sig = document.getElementById('sig-overlay');
+            if (!sig) {
+                sig = document.createElement('div');
+                sig.id = 'sig-overlay';
+                sig.className = 'signature-overlay';
+                let dragging = false, startX = 0, startY = 0;
+                sig.addEventListener('mousedown', (e) => {
+                    dragging = true;
+                    startX = e.clientX - sig.offsetLeft;
+                    startY = e.clientY - sig.offsetTop;
+                });
+                document.addEventListener('mousemove', (e) => {
+                    if (dragging) {
+                        sig.style.left = (e.clientX - startX) + 'px';
+                        sig.style.top = (e.clientY - startY) + 'px';
+                    }
+                });
+                document.addEventListener('mouseup', () => dragging = false);
+                document.getElementById('pdf-area').appendChild(sig);
+            }
+            sig.style.width = '200px';
+            sig.style.height = '80px';
+            sig.innerHTML = '';
+            sig.appendChild(assinCanvas);
+            sig.style.left = '100px';
+            sig.style.top = '500px';
+        }
+
+        async function processarAssinatura() {
+            if (!ficheroCarregado) { alert('Carregue um PDF'); return null; }
+            const sig = document.getElementById('sig-overlay');
+            if (!sig) { alert('Posicione a assinatura'); return null; }
+            
+            const canvas = sig.querySelector('canvas');
+            const imagemAssinatura = canvas.toDataURL('image/png');
+            const ajusteX = parseInt(document.getElementById('ajuste-x').value || 0);
+            const ajusteY = parseInt(document.getElementById('ajuste-y').value || 0);
+            const posX = Math.round(sig.offsetLeft / pdfScale) + ajusteX;
+            const posY = Math.round(sig.offsetTop / pdfScale) + ajusteY;
+            
+            const formData = new FormData();
+            formData.append('file', ficheroCarregado);
+            formData.append('dados', JSON.stringify({
+                posicao: { x: posX, y: posY },
+                imagemAssinada: imagemAssinatura,
+                largura: 200,
+                altura: 80
+            }));
+
+            const resp = await fetch('/api/sign/apply', {method: 'POST', body: formData});
+            const data = await resp.json();
+            return data.ok ? data.downloadUrl : null;
+        }
+
+        async function guardarAssinatura() {
+            const url = await processarAssinatura();
+            if (url) {
+                ultimoPdfAssinado = url;
+                alert('Assinatura guardada!');
+            }
+        }
+
+        async function downloadAssinatura() {
+            let url = ultimoPdfAssinado || await processarAssinatura();
+            if (url) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = url.split('/').pop();
+                a.click();
+            }
+        }
+    </script>
+</body>
+</html>

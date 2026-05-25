@@ -1,158 +1,71 @@
-const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
-const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
-const { Document, Packer, Paragraph, HeadingLevel } = require("docx");
-const mammoth = require("mammoth");
-const pdfjsLib = require("pdfjs-dist");
-const { v4: uuid } = require("uuid");
+ï»¿const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const mammoth = require('mammoth');
+const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+const { v4: uuid } = require('uuid');
 
 const app = express();
-const PORT = 3000;
+const upload = multer({ dest: 'uploads/' });
 
-app.use(express.json({ limit: "50mb" }));
 app.use(express.static(__dirname));
+app.use('/outputs', express.static(path.join(__dirname, 'outputs')));
 
-const dirs = ["uploads", "outputs", "data", "temp"];
-dirs.forEach(d => { const p = path.join(__dirname, d); if (!fs.existsSync(p)) fs.mkdirSync(p); });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
+['temp', 'uploads', 'outputs'].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
 });
 
-const upload = multer({ storage, fileFilter: (req, file, cb) => cb(null, true) });
-
-async function converterWordParaPdf(caminhoOrigem) {
-  const { value: textoWord } = await mammoth.extractRawText({ path: caminhoOrigem });
-  const pdfDoc = await PDFDocument.create();
-  const fonte = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  let pagina = pdfDoc.addPage([595, 842]);
-  let y = 800;
-  (textoWord || "Vazio").split("\n").forEach(par => {
-    if (!par.trim()) return;
-    let linha = "";
-    par.split(" ").forEach(p => {
-      const teste = linha ? linha + " " + p : p;
-      if (fonte.widthOfTextAtSize(teste, 11) > 500 && linha) {
-        pagina.drawText(linha, { x: 50, y, size: 11, font: fonte, color: rgb(0,0,0) });
+app.post('/api/convert/word-pdf', upload.single('file'), async (req, res) => {
+  try {
+    console.log('[1] Ficheiro:', req.file.originalname);
+    
+    const result = await mammoth.convertToHtml({path: req.file.path});
+    const html = result.value;
+    console.log('[2] HTML extraido');
+    
+    const texto = html.replace(/<[^>]*>/g, '').trim();
+    console.log('[3] Texto:', texto.substring(0, 50) + '...');
+    
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595, 842]);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    
+    const linhas = texto.split('\n');
+    let y = 750;
+    
+    linhas.forEach(linha => {
+      if (linha.trim() && y > 50) {
+        page.drawText(linha.trim().substring(0, 80), {
+          x: 50, y: y, size: 11, font: font, color: rgb(0, 0, 0)
+        });
         y -= 15;
-        if (y < 50) { pagina = pdfDoc.addPage([595, 842]); y = 800; }
-        linha = p;
-      } else {
-        linha = teste;
       }
     });
-    if (linha) {
-      pagina.drawText(linha, { x: 50, y, size: 11, font: fonte, color: rgb(0,0,0) });
-      y -= 15;
-      if (y < 50) { pagina = pdfDoc.addPage([595, 842]); y = 800; }
-    }
-  });
-  const caminhoSaida = path.join(__dirname, "temp", uuid() + ".pdf");
-  fs.writeFileSync(caminhoSaida, await pdfDoc.save());
-  return { caminhoSaida, tamanho: fs.statSync(caminhoSaida).size, qualidade: 95 };
-}
-
-async function converterPdfParaWord(caminhoOrigem) {
-  const pdfBytes = fs.readFileSync(caminhoOrigem);
-  const data = new Uint8Array(pdfBytes);
-  const pdf = await pdfjsLib.getDocument(data).promise;
-  let textoExtraido = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map(item => item.str).join(" ");
-    textoExtraido += pageText + "\n";
-  }
-  const paragrafos = [
-  ];
-  textoExtraido.split("\n").forEach(linha => {
-    if (linha.trim()) paragrafos.push(new Paragraph({ text: linha, spacing: { after: 50 } }));
-  });
-  const doc = new Document({ sections: [{ children: paragrafos }] });
-  const caminhoSaida = path.join(__dirname, "temp", uuid() + ".docx");
-  const buffer = await Packer.toBuffer(doc);
-  fs.writeFileSync(caminhoSaida, buffer);
-  return { caminhoSaida, tamanho: buffer.length, paginas: pdf.numPages, qualidade: 95 };
-}
-
-async function converterPdfParaExcel(caminhoOrigem) {
-  const pdfBytes = fs.readFileSync(caminhoOrigem);
-  const data = new Uint8Array(pdfBytes);
-  const pdf = await pdfjsLib.getDocument(data).promise;
-  let linhasConteudo = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map(item => item.str).join("");
-    const cleaned = pageText.replace(/\s+/g, " ").trim();
-    if (cleaned) linhasConteudo.push({ pagina: i, conteudo: cleaned });
-  }
-  let xml = `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Conteudo"><Table><Row><Cell><Data ss:Type="String">Pagina</Data></Cell><Cell><Data ss:Type="String">Conteudo</Data></Cell></Row>`;
-  linhasConteudo.forEach(linha => { xml += `<Row><Cell><Data ss:Type="Number">${linha.pagina}</Data></Cell><Cell><Data ss:Type="String">${linha.conteudo}</Data></Cell></Row>`; });
-  xml += `</Table></Worksheet></Workbook>`;
-  const caminhoSaida = path.join(__dirname, "temp", uuid() + ".xls");
-  fs.writeFileSync(caminhoSaida, xml, "utf8");
-  return { caminhoSaida, tamanho: fs.statSync(caminhoSaida).size, qualidade: 85 };
-}
-
-app.post("/api/convert/word-pdf", upload.single("file"), async (req, res) => {
-  try {
-    const resultado = await converterWordParaPdf(req.file.path);
-    const outputFilename = uuid() + "_convertido.pdf";
-    const outputPath = path.join(__dirname, "outputs", outputFilename);
-    fs.copyFileSync(resultado.caminhoSaida, outputPath);
+    
+    console.log('[4] PDF criado');
+    
+    const nomeOutput = 'convertido_' + uuid() + '.pdf';
+    const caminhoOutput = path.join(__dirname, 'outputs', nomeOutput);
+    const pdfBytes = await pdfDoc.save();
+    fs.writeFileSync(caminhoOutput, pdfBytes);
+    
+    console.log('[5] PDF salvo');
     fs.unlinkSync(req.file.path);
-    fs.unlinkSync(resultado.caminhoSaida);
-    res.json({ ok: true, downloadUrl: `/outputs/${outputFilename}`, tamanho: resultado.tamanho, qualidade: 95 });
+    
+    res.json({ ok: true, downloadUrl: '/outputs/' + nomeOutput });
+    
   } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    console.error('[ERRO]', err.message);
+    if (req.file) fs.unlinkSync(req.file.path);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post("/api/convert/pdf-word", upload.single("file"), async (req, res) => {
-  try {
-    const resultado = await converterPdfParaWord(req.file.path);
-    const outputFilename = uuid() + "_convertido.docx";
-    const outputPath = path.join(__dirname, "outputs", outputFilename);
-    fs.copyFileSync(resultado.caminhoSaida, outputPath);
-    fs.unlinkSync(req.file.path);
-    fs.unlinkSync(resultado.caminhoSaida);
-    res.json({ ok: true, downloadUrl: `/outputs/${outputFilename}`, tamanho: resultado.tamanho });
-  } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ error: err.message });
-  }
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'test-word.html'));
 });
 
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.use("/outputs", express.static("outputs"));
-
-app.post('/api/convert/pdf-excel', upload.single('file'), async (req, res) => {
-  try {
-    const resultado = await converterPdfParaExcel(req.file.path);
-    const outputFilename = uuid() + '_convertido.xls';
-    const outputPath = path.join(__dirname, 'outputs', outputFilename);
-    fs.copyFileSync(resultado.caminhoSaida, outputPath);
-    fs.unlinkSync(req.file.path);
-    fs.unlinkSync(resultado.caminhoSaida);
-    res.json({ ok: true, downloadUrl: "/outputs/" + outputFilename, tamanho: resultado.tamanho });
-  } catch (err) {
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    res.status(500).json({ error: err.message });
-  }
+app.listen(3000, () => {
+  console.log('Servidor: http://localhost:3000');
 });
-
-app.listen(PORT, () => {
-  console.log("\n+------------------------------------------------+");
-  console.log(`¦  ?? DocFlow Pro v1.0 ? http://localhost:${PORT}  ¦`);
-  console.log("+------------------------------------------------+\n");
-});
-
-
-
-
